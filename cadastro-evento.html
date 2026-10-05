@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Evento</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <header>
+    <h1>Gerenciador de eventos</h1>
+    <nav>
+      <a href="cadastro-palest.html">Cadastro palestrantes</a>
+      <a href="cadastro-evento.html">Cadastro evento</a>
+      <a href="gerenciador.html">Gerenciador de evento</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2 id="tituloTela">Cadastro de evento</h2>
+
+    <form id="formEvento">
+      <input type="hidden" id="eventoId">
+
+      <div class="form-group">
+        <label for="nome">Nome</label>
+        <input type="text" id="nome" required>
+      </div>
+
+      <div class="form-group">
+        <label for="descricao">Descrição</label>
+        <input type="text" id="descricao" required>
+      </div>
+
+      <div class="form-group">
+        <label for="local">Local</label>
+        <input type="text" id="local" required>
+      </div>
+
+      <div class="form-group">
+        <label for="palestrante">Palestrante</label>
+        <select id="palestrante" required>
+          <option value="">Carregando palestrantes...</option>
+        </select>
+      </div>
+
+      <button type="submit" id="btnSubmit">Cadastrar</button>
+    </form>
+  </main>
+
+  <script>
+    const API_URL = 'http://localhost:3000';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await carregarPalestrantes();
+      verificarEdicao();
+    });
+
+    // Regra: Recuperar palestrantes previamente cadastrados
+    async function carregarPalestrantes() {
+      try {
+        const res = await fetch(`${API_URL}/palestrantes`);
+        const palestrantes = await res.json();
+        
+        const select = document.getElementById('palestrante');
+        select.innerHTML = '<option value="">Selecione um palestrante</option>';
+
+        palestrantes.forEach(p => {
+          select.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
+        });
+      } catch (err) {
+        console.error('Erro ao buscar palestrantes', err);
+      }
+    }
+
+    // Regra: Se veio do botão 'Editar Evento', preenche o formulário
+    function verificarEdicao() {
+      const eventoSalvo = localStorage.getItem('eventoParaEditar');
+      if (eventoSalvo) {
+        const evento = JSON.parse(eventoSalvo);
+        
+        document.getElementById('eventoId').value = evento.id;
+        document.getElementById('nome').value = evento.nomeEvento;
+        document.getElementById('descricao').value = evento.descricao;
+        document.getElementById('local').value = evento.local;
+        
+        if (evento.palestranteId) {
+          document.getElementById('palestrante').value = evento.palestranteId;
+        }
+
+        document.getElementById('tituloTela').innerText = 'Editar evento';
+        document.getElementById('btnSubmit').innerText = 'Cadastrar'; // Mantém o botão com 'Cadastrar' conforme regra
+      }
+    }
+
+    document.getElementById('formEvento').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const eventoId = document.getElementById('eventoId').value;
+      const nomeEvento = document.getElementById('nome').value.trim();
+      const descricao = document.getElementById('descricao').value.trim();
+      const local = document.getElementById('local').value.trim();
+      const palestranteId = document.getElementById('palestrante').value;
+
+      // Regra: Todos os campos obrigatórios
+      if (!nomeEvento || !descricao || !local || !palestranteId) {
+        alert('Todos os campos são de preenchimento obrigatório.');
+        return;
+      }
+
+      try {
+        if (eventoId) {
+          // MODO ATUALIZAÇÃO (Atualiza a mesma base sem criar um novo)
+          const resUpdate = await fetch(`${API_URL}/eventos/${eventoId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nomeEvento, descricao, local })
+          });
+
+          if (resUpdate.ok) {
+            // Atualiza vínculo do palestrante
+            await fetch(`${API_URL}/eventos/${eventoId}/palestrantes/${palestranteId}`, { method: 'POST' });
+            
+            localStorage.removeItem('eventoParaEditar');
+            alert('cadastro concluído com sucesso');
+            window.location.href = 'gerenciador.html'; // Retorna ao gerenciador
+          } else {
+            alert('Erro ao atualizar evento.');
+          }
+
+        } else {
+          // MODO NOVO CADASTRO
+          const resNovo = await fetch(`${API_URL}/eventos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nomeEvento, descricao, local })
+          });
+
+          if (!resNovo.ok) throw new Error('Erro ao cadastrar evento');
+          const novoEvento = await resNovo.json();
+
+          // Vincula palestrante selecionado
+          await fetch(`${API_URL}/eventos/${novoEvento.id}/palestrantes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ palestranteId })
+          });
+
+          alert('cadastro concluído com sucesso');
+          document.getElementById('formEvento').reset();
+        }
+      } catch (err) {
+        alert('Erro ao realizar operação.');
+      }
+    });
+  </script>
+</body>
+</html>

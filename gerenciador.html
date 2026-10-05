@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Eventos</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <header>
+    <h1>Gerenciador de eventos</h1>
+    <nav>
+      <a href="cadastro-palest.html">Cadastro palestrantes</a>
+      <a href="cadastro-evento.html">Cadastro evento</a>
+      <a href="gerenciador.html">Gerenciador de evento</a>
+    </nav>
+  </header>
+
+ <main>
+    <h2>Eventos</h2>
+
+    <div class="cards-grid" id="containerCards">
+      <!-- Cards renderizados via JavaScript -->
+    </div>
+  </main>
+
+  <script>
+    const API_URL = 'http://localhost:3000';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Limpa qualquer estado de edição ao carregar a tela principal
+      localStorage.removeItem('eventoParaEditar');
+      carregarEventos();
+    });
+
+    async function carregarEventos() {
+      try {
+        const res = await fetch(`${API_URL}/eventos`);
+        const eventos = await res.json();
+
+        const container = document.getElementById('containerCards');
+        container.innerHTML = '';
+
+        if (eventos.length === 0) {
+          container.innerHTML = '<p>Nenhum evento cadastrado.</p>';
+          return;
+        }
+
+        eventos.forEach(e => {
+          const palestrantesNomes = e.palestrantes.map(p => p.nome).join(', ') || 'Nenhum';
+          const palestranteId = e.palestrantes.length > 0 ? e.palestrantes[0].id : '';
+
+          // Objeto simples para enviar na edição
+          const dadosEvento = JSON.stringify({
+            id: e.id,
+            nomeEvento: e.nomeEvento,
+            descricao: e.descricao,
+            local: e.local,
+            palestranteId: palestranteId
+          });
+
+          container.innerHTML += `
+            <div class="card">
+              <p><strong>nome:</strong> ${e.nomeEvento}</p>
+              <p><strong>descrição:</strong> ${e.descricao}</p>
+              <p><strong>local:</strong> ${e.local}</p>
+              <p><strong>palestrante:</strong> ${palestrantesNomes}</p>
+              
+              <div class="card-actions">
+                <button class="btn-action" onclick='prepararEdicao(${dadosEvento})'>Editar</button>
+                <button class="btn-action" onclick="excluirEvento(${e.id})">Excluir</button>
+              </div>
+            </div>
+          `;
+        });
+      } catch (err) {
+        console.error('Erro ao carregar eventos:', err);
+      }
+    }
+
+    // Regra: Redireciona para cadastro-evento.html preenchendo as informações
+    function prepararEdicao(evento) {
+      localStorage.setItem('eventoParaEditar', JSON.stringify(evento));
+      window.location.href = 'cadastro-evento.html';
+    }
+
+    // Regra: Confirmação de exclusão
+    async function excluirEvento(id) {
+      const confirmacao = confirm('Deseja realmente excluir este evento?');
+      if (confirmacao) {
+        try {
+          const res = await fetch(`${API_URL}/eventos/${id}`, { method: 'DELETE' });
+          if (res.ok) {
+            carregarEventos();
+          } else {
+            alert('Erro ao excluir evento.');
+          }
+        } catch (err) {
+          alert('Erro de conexão com o servidor.');
+        }
+      }
+    }
+  </script>
+</body>
+</html>

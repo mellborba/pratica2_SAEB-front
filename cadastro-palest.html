@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro do Palestrante</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <header>
+        <h3>Gerenciador de eventos</h3>
+        <nav>
+            <a href="cadastro-palest.html">Cadastro Palestrante</a>
+            <a href="cadastro-evento.html">Cadastro Evento</a>
+            <a href="gerenciador.html">Gerenciador de Eventos</a>
+        </nav>
+    </header>
+
+    <main>
+    <h2>Cadastro palestrante</h2>
+
+    <form id="formPalestrante">
+      <div class="form-group">
+        <label for="nome">Nome</label>
+        <input type="text" id="nome" required>
+      </div>
+
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" required>
+      </div>
+
+      <button type="submit">Cadastrar</button>
+    </form>
+  </main>
+
+  <script>
+    const API_URL = 'http://localhost:3000';
+
+    function validarEmail(email) {
+      const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return regex.test(email);
+    }
+
+    document.getElementById('formPalestrante').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const nome = document.getElementById('nome').value.trim();
+      const email = document.getElementById('email').value.trim();
+
+      // Regra: Garantir preenchimento e e-mail válido
+      if (!nome || !email) {
+        alert('Todos os campos são de preenchimento obrigatório.');
+        return;
+      }
+
+      if (!validarEmail(email)) {
+        alert('Por favor, insira um e-mail válido.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/palestrantes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, email })
+        });
+
+        if (res.ok) {
+          // Regra: Mensagem exata exigida
+          alert('cadastro concluído com sucesso');
+          document.getElementById('formPalestrante').reset();
+        } else {
+          const errData = await res.json();
+          alert(errData.error || 'Erro ao realizar o cadastro.');
+        }
+      } catch (err) {
+        alert('Erro de conexão com o servidor.');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+/* Estilos Básicos Globais */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #fff;
+}
+
+/* Menu Superior */
+header {
+  background-color: #d9d9d9;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: #000;
+  font-weight: bold;
+}
+
+/* Área de Conteúdo */
+main {
+  padding: 30px;
+}
+
+/* Formulários Simples */
+.form-group {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  width: 250px;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+input, select {
+  padding: 6px;
+  border: 1px solid #999;
+  margin-bottom: 25px;
+}
+
+button {
+  background-color: #d9d9d9;
+  border: none;
+  padding: 8px 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Layout em Cards (Tela Gerenciador) */
+.cards-grid {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.card {
+  background-color: #d9d9d9;
+  padding: 15px;
+  width: 220px;
+}
+
+.btn-action {
+  background-color: #8c8c8c;
+  color: white;
+  margin-right: 5px;
+}
